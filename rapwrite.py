@@ -16,54 +16,64 @@ followUp_Listbox = Listbox(root)
 followUp_Listbox.pack(pady=15)
 
 ##Input String That Gets Examined
+def delete():
+  rhyme_Listbox.delete(0, END)
+  followUp_Listbox.delete(0, END)
 
-string = input('Enter string: ')
+def button_command():
+  text = string.get()
+  words = text.split()
+  #API Request Section
 
-words = string.split()
-words
+  rhymeRequest = requests.get(f'http://api.datamuse.com/words?rel_rhy={words[-1]}').text
 
-#API Request Section
+  rhymeRequest_info = json.loads(rhymeRequest)
 
-rhymeRequest = requests.get(f'http://api.datamuse.com/words?rel_rhy={words[-1]}').text
+  trgRequest = requests.get(f'http://api.datamuse.com/words?rel_trg={words[-1]}').text
 
-rhymeRequest_info = json.loads(rhymeRequest)
+  trgRequest_info = json.loads(trgRequest)
 
-trgRequest = requests.get(f'http://api.datamuse.com/words?rel_trg={words[-1]}').text
+  bgaRequest = requests.get(f'http://api.datamuse.com/words?rel_bga={words[-1]}').text
 
-trgRequest_info = json.loads(trgRequest)
+  bgaRequest_info = json.loads(bgaRequest)
 
-bgaRequest = requests.get(f'http://api.datamuse.com/words?rel_bga={words[-1]}').text
+  #Main Functions
+  def rhymeList():
+    wordRhymes = []
+    length = len(rhymeRequest_info)
+    for i in range(length):
+      if rhymeRequest_info[i]['score'] >= 1:
 
-bgaRequest_info = json.loads(bgaRequest)
+        result = rhymeRequest_info[i]['word']
+        wordRhymes.append(result)
+    return wordRhymes
 
-#Main Functions
-def rhymeList():
-  wordRhymes = []
-  length = len(rhymeRequest_info)
-  for i in range(length):
-    if rhymeRequest_info[i]['score'] >= 1:
+  def followUp():
+    bgaStarters = []
+    length = len(bgaRequest_info)
+    for i in range(length):
+      if bgaRequest_info[i]['score'] >= 1:
 
-      result = rhymeRequest_info[i]['word']
-      wordRhymes.append(result)
-  return wordRhymes
+        result = bgaRequest_info[i]['word']
+        bgaStarters.append(result)
+    return bgaStarters
 
-def followUp():
-  bgaStarters = []
-  length = len(bgaRequest_info)
-  for i in range(length):
-    if bgaRequest_info[i]['score'] >= 1:
+  rhyList = rhymeList()
+  bgaList = followUp()
 
-      result = bgaRequest_info[i]['word']
-      bgaStarters.append(result)
-  return bgaStarters
+  delete()
 
-rhyList = rhymeList()
-bgaList = followUp()
+  for item in rhyList:
+    rhyme_Listbox.insert(END, item)
 
-for item in rhyList:
-  rhyme_Listbox.insert(END, item)
+  for item in bgaList:
+    followUp_Listbox.insert(END, item)
+  return None
 
-for item in bgaList:
-  followUp_Listbox.insert(END, item)
+
+string = Entry(root)
+string.pack()
+
+Button(root, text="Unblock", command=button_command).pack()
 
 root.mainloop()
